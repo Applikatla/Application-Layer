@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node scripts/seed.js",
-    "test": "node tests/runAllTests.js"
+    "test": "node tests/runAllTests.js",
+    "test:auth": "node tests/testLoginAuth.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

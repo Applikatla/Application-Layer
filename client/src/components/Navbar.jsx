@@ -121,7 +121,7 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
                 Bob
               </button>
               <button
-                onClick={() => quickLogin('admin', 'adminpassword123')}
+                onClick={() => quickLogin('admin', 'admin123')}
                 title="Switch to SOC Admin"
                 className="px-1.5 py-0.5 rounded text-[11px] hover:bg-slate-800 text-purple-400"
               >

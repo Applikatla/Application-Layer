@@ -9,17 +9,13 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const logout = () => {
     if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem('alad_token');
-      if (savedToken) {
-        setToken(savedToken);
-      } else {
-        // Default auto-login as Alice for instant demo experience
-        quickLogin('alice', 'password123');
-      }
+      localStorage.removeItem('alad_token');
     }
-  }, []);
+    setToken(null);
+    setUser(null);
+  };
 
   const fetchProfile = async (currentToken) => {
     try {
@@ -31,6 +27,9 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
       } else if (data.classification === 'blocked') {
         setUser((prev) => ({ ...prev, status: 'blocked', riskScore: data.riskScore || 100 }));
+      } else {
+        // If token is invalid or expired, reset
+        logout();
       }
     } catch (err) {
       console.error('Failed to fetch profile:', err);
@@ -40,6 +39,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedToken = localStorage.getItem('alad_token');
+      if (savedToken) {
+        setToken(savedToken);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (token) {
       fetchProfile(token);
     }
@@ -47,6 +57,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      setLoading(true);
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,31 +65,27 @@ export const AuthProvider = ({ children }) => {
       });
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, error: data.message || data.error };
+        setLoading(false);
+        return { 
+          success: false, 
+          error: data.message || data.error || 'Authentication failed' 
+        };
       }
       if (typeof window !== 'undefined') {
         localStorage.setItem('alad_token', data.token);
       }
       setToken(data.token);
       setUser(data.user);
+      setLoading(false);
       return { success: true, user: data.user };
     } catch (err) {
+      setLoading(false);
       return { success: false, error: err.message };
     }
   };
 
   const quickLogin = async (username, password) => {
-    setLoading(true);
-    await login(username, password);
-    setLoading(false);
-  };
-
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('alad_token');
-    }
-    setToken(null);
-    setUser(null);
+    return await login(username, password);
   };
 
   return (
